@@ -3,7 +3,7 @@ from kafka import KafkaConsumer
 import matplotlib.pyplot as plt
 
 bootstrap_servers = '164.92.76.15:9092'
-topic = '21611'
+topic = '21612'
 
 # Configuración del consumidor de Kafka
 consumer = KafkaConsumer(
@@ -42,13 +42,24 @@ def direccion_viento_a_numero(direccion_viento):
     direcciones = {"N": 0, "NE": 1, "E": 2, "SE": 3, "S": 4, "SW": 5, "W": 6, "NW": 7}
     return direcciones.get(direccion_viento, -1)
 
+def decode(payload_bytes):
+    payload = int.from_bytes(payload_bytes, byteorder='big')
+    temp_codificada = (payload >> 10) & 0x3FFF  # 14 bits para la temperatura
+    temperatura = (temp_codificada / 163.84) - 50
+    humedad = (payload >> 3) & 0x7F  # 7 bits para la humedad
+    direccion_viento = payload & 0x07  # 3 bits para la dirección del viento
+    direcciones = ["N", "NW", "W", "SW", "S", "SE", "E", "NE"]
+    direccion_viento_str = direcciones[direccion_viento]
+    print(f"Decodificación: Temp={temperatura}, Hum={humedad}, Dir={direccion_viento_str}")
+    return temperatura, humedad, direccion_viento_str
+
 # Bucle principal del consumidor para escuchar mensajes y procesarlos
 for mensaje in consumer:
     if mensaje.value is not None:
-        payload = json.loads(mensaje.value)
-        all_temp.append(payload['temperatura'])
-        all_hume.append(payload['humedad'])
-        all_wind.append(direccion_viento_a_numero(payload['direccion_viento']))
+        payload = decode(mensaje.value)
+        all_temp.append(payload[0])
+        all_hume.append(payload[1])
+        all_wind.append(direccion_viento_a_numero(payload[2]))
         plotAllData(all_temp, all_hume, all_wind)
     else:
         print("Mensaje recibido sin payload.")
