@@ -5,7 +5,7 @@ from confluent_kafka import Producer
 
 # Configuración del productor de Kafka
 bootstrap_servers = '164.92.76.15:9092'
-topic = '21610'
+topic = '21611'
 
 temperatura_media = 50.0
 humedad_media = 50
@@ -45,7 +45,7 @@ def enviar_datos():
         else:
             print("No se pudo codificar el mensaje.")
         
-        time.sleep(5)
+        time.sleep(30)
 
 if __name__ == '__main__':
     enviar_datos()
